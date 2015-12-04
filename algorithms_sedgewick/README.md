@@ -185,3 +185,177 @@ Algorithms are sooo cool but I like math on paper...
 ### Stack and Queue Applications
 
 ....
+
+## Lecture 12: Undirected Graphs
+
+### Introduction to graphs
+
+Graph: Set of _vertices_ connected pairwise by _edges_.
+
+| graph | vertex | edge |
+|:----------:|:-----------:|:----------:|
+| communication | telephone | fiber optic cable |
+| circuit |gate, resistor, processor | wire |
+| mechanical | joint | rod, beam, spring |
+| financial | stock, currency | transactions |
+| transportation | street intersection, airport | highway, airway |
+| internet | class C network | connection |
+| game | board position | legal move |
+| social relationship | person, actor | friendship, movie cast |
+| neural network | neuron | synapse |
+| protein network | protein | protein-protein interaction |
+| molecule | atom | bond |
+
+Graph terminology:
+
+* path = sequence of vertices connected by edges
+* cycle = path whose first and last vertices are the same
+* two vertices are connected if there is a path between them
+
+Graph-processing problems:
+
+* Path : is there a path between s and t?
+* Shortest path: what is the shortest path between s and t?
+* Cycle: is there a cycle in the graph?
+* Euler tour: is there a cycle that uses each edge exactly once?
+* Hamilton tour: is there a cycle that uses each vertex exactly once?
+* Connectivity: is there a way to connect all the vertices?
+* MST (minimum spanning tree): what is the best way to connect all the vertices?
+* Bi-Connectivity: is there a vertex whose removal disconnects the graph?
+* Planarity: Can we draw the graph in the plane with no crossings edges?
+* Graph isomorphism: Do two adjacency lists represent the same graph?
+
+### Graph API
+
+Vertex representation: use integers between 0 and V-1 and convert between integers and names with symbol table.
+
+Type of anomalies: self-loop and parallel edges.
+
+Graph data type specification:
+
+```C++
+struct graph{
+	//create an empty graph with V vertices
+	graph(unsigned int v);
+
+	//add an edge v-w
+	void add_edge(unsigned int v, unsigned int w);
+
+	//number of vertices
+	unsigned int v();
+
+	//number of edges
+	unsigned int e();
+
+	//vertices adjacent to v
+	std::vector<unsigned int>& adj(unsigned int v);
+};
+
+//compute the degree of v (the number of edges associated with this vertex)
+unsigned int degree(graph const& g, unsigned int v);
+	
+//compute maximum degree
+unsigned int max_degree(graph const& g);
+
+//average degree
+double average_degree(graph const& g){ return 2.0 * g.e()/g.v(); }
+
+//number of self loops
+unsigned int num_of_self_loops(graph const& g);
+```
+
+Basic graph client design (an implementation can be found in `graph/basic_graph_client.cpp`):
+
+- Read in the number of vertices V from input
+- Read in the number of edges E from input
+- Repeat:
+	- Read in pairs of integers
+- Repeat:
+	- For each vertices print the adjacent list
+
+Graph representations:
+
+- list of edges: maintain a list of the edges (linked list or vector).
+- adjacency matrix: maintain a 2D `VxV` boolean array; for each edge v-w in graph: `adj[v][w] = adj[v][w] = true` (two entries for each edge), better for dense graphs.
+- adjacency list: maintain vertex-indexed array of lists(bags), better for sparse graphs.
+
+Note: real world graphs tend to be sparse.
+
+| [Representation] | [Space] | [Add edge] | [Is v connected to w?] | [Iterate over vertices adjacent to v] |
+|:----------:|:-----------:|:-----------:|:-----------:|:-----------:|
+| list of edges | `E` | `1` | `E` | `E` |
+| adjacency matrix | `V^2` | `1` | `1` | `V` |
+| adjacency list | `V+E` | `1` | `degree(V)` | `degree(V)` |
+
+Note: adjacency matrix disallows parallel edges.
+
+### Depth-First Search
+
+Goal: systematically search through a graph (mimic maze exploration).
+
+DFS(to visit a vertex `v`):
+
+- Mark `v` as visited.
+- Recursively visit all unmarked vertices `w` adjacent to `v`.
+
+Typical applications:
+
+- find all vertices connected to a given source vertex.
+- find a path between two vertices.
+
+Design pattern: decouple graph data type from graph processing.
+
+- create a graph object
+- pass the graph to a graph-processing routine
+- query that graph-processing routine for information
+
+```C++
+struct paths{
+	//finds paths in g from source s
+	paths(graph const& g, unsigned int s);
+
+	//is there a path from s to v?
+	bool has_path_to(unsigned int v);
+
+	//path from s to v, empty string if no such path
+	std::vector<unsigned int>& path_to(unsigned int v);
+};
+```
+
+A possible basic client which prints all vertices connected to a given vertex s (`graph/basic_graph_paths_client.cpp`)
+
+```C++
+paths ps{g, s};
+for(unsigned int v = 0; v < g.v(); ++v)
+	if(ps.has_path_to(v))
+		std::cout << v << std::cout;
+```
+
+The algorithm is using 2 arrays:
+
+- a boolean array `marked` used to mark the visited vertices.
+- an unsigned int array `edge_to` used to keep track of paths; `edge_to[w] = v` means that edge `v-w` taken to visit `w` for first time.
+
+An implementation can be found in `graph/paths_dfs.h`.
+
+Proposition: DFS marks all vertices connected to s in time proportional to the sum of their degrees.
+
+Pf: Each vertex connected to s is visited once.
+
+Other application examples: flood fill
+
+Assumptions: a picture has millions to billions of pixels.
+
+Solution: build a grid graph, where
+
+- vertex: pixels
+- edge: only between adjacent pixels with similar colour
+- blob: all pixels connected to given pixel.
+
+
+### Breadth-First Search
+
+### Connected Components
+
+### Graph Challenges
+
