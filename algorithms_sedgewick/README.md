@@ -35,7 +35,7 @@ Union-find data type specification:
 
 ```C++
 struct UF {
-    //initialise union-find data structure with N objects [0 … N-1]
+    //initialise union-find data structure with N objects [0 ... N-1]
     UF(unsigned int N);
 
     //add connection between p and q (union/connect command)
@@ -43,7 +43,7 @@ struct UF {
     //are p and q connected - in the same component (find/connected query)
     bool connected(unsigned int p, unsigned int q);
 
-    //component identifier for p in [0 … N-1]
+    //component identifier for p in [0 ... N-1]
     unsigned int find(unsigned int p);
 
     //number of components
@@ -118,7 +118,7 @@ Proof:
 
 Proposition:
 
-* starting from an empty data structure, any sequence of `M` union-find operations on `N` objects is upper bounded by `c(N + M lg* (N))` array accesses (`lg*` - iterative log function, `lg*(2^65536) = 5`)
+* starting from an empty data structure, any sequence of `M` union-find operations on `N` objects is upper bounded by `O(N + M lg* (N))` array accesses (`lg*` - iterative log function, `lg*(2^65536) = 5`)
 * so, in practice `WQUPC` is _almost_ linear.
 
 #### Summary
@@ -208,9 +208,25 @@ Graph: Set of _vertices_ connected pairwise by _edges_.
 
 Graph terminology:
 
-* path = sequence of vertices connected by edges
-* cycle = path whose first and last vertices are the same
-* two vertices are connected if there is a path between them
+* a _self-loop_ is an edge that connects a vertex to itself
+* two edges are _parallel_ if they connect the same pair of vertices
+* when an edge connects two vertices, we say that the vertices are _adjacent_ to one another and that the edge is _incident_ on both vertices
+* the _degree_ of a vertex is the number of edges incident on it
+* a _subgraph_ is a subset of graph's edges (and associated vertices) that constitutes a graph
+* a _path_ in a graph is a sequence of vertices connected by edges
+* a _simple path_ is one with no repeated vertices
+* a _cycle_ is a path (with at least one edge) whose first and last vertices are the same
+* a _simple cycle_ is a cycle with no repeated edges or vertices(except the requisite repetition of the first and last vertices)
+* the _length_ of a path or cycle is its number of edges
+* we say that one vertex is _connected_ to another if there exists a path that contains both of them
+* a graph is _connected_ if there is a path from every vertex to every other vertex
+* a graph that is not connected consists of a set of _connected components_, which are maximal connected subgraphs
+* an _acyclic graph_ is a graph with no cycles
+* a _tree_ is an acyclic connected graph
+* a _forest_ is a disjunct set of trees
+* a _spanning tree_ of a connected graph is a subgraph that contains all of the graph's vertices and is a single tree
+* a _spanning forest_ of a graph is the union of the spanning trees of its connected components
+* a _bipartite graph_ is a graph whose vertices we can divide into two sets such that all edges connect a vertex in one set with a vertex in the other set
 
 Graph-processing problems:
 
@@ -227,59 +243,56 @@ Graph-processing problems:
 
 ### Graph API
 
-Vertex representation: use integers between 0 and V-1 and convert between integers and names with symbol table.
+Vertex representation: use integers between `0...V-1` and convert between integers and names with symbol table
 
-Type of anomalies: self-loop and parallel edges.
+Type of anomalies: self-loop and parallel edges
 
 Graph data type specification:
 
 ```C++
-struct graph{
-	//create an empty graph with V vertices
-	graph(unsigned int v);
+struct graph_t{
+	//create an empty graph with sz vertices
+	graph_t(unsigned int sz);
 
 	//add an edge v-w
 	void add_edge(unsigned int v, unsigned int w);
 
 	//number of vertices
-	unsigned int v();
+	unsigned int vertices();
 
-	//number of edges
-	unsigned int e();
+	//number of edges/degree (per total or per vertex)
+	unsigned int edges(unsigned int v = std::numeric_limits<unsigned int>::max());
+	
+	//the maximum degree
+	unsigned int max_edges();
+	
+	//number of self loops
+	unsigned int num_of_self_loops();
+	
+	//average degree
+	double average_degree(){ return 2.0 * g.edges()/g.vertices(); }
 
 	//vertices adjacent to v
-	std::vector<unsigned int>& adj(unsigned int v);
+	std::unordered_set<unsigned int> const& adj(unsigned int v);
 };
-
-//compute the degree of v (the number of edges associated with this vertex)
-unsigned int degree(graph const& g, unsigned int v);
-	
-//compute maximum degree
-unsigned int max_degree(graph const& g);
-
-//average degree
-double average_degree(graph const& g){ return 2.0 * g.e()/g.v(); }
-
-//number of self loops
-unsigned int num_of_self_loops(graph const& g);
 ```
 
-Basic graph client design (an implementation can be found in `graph/basic_graph_client.cpp`):
+Basic graph client design (an implementation can be found in `undirected_graphs/basic_graph_client.cpp`):
 
-- Read in the number of vertices V from input
-- Read in the number of edges E from input
+- Read in the number of vertices `V` from input
+- Read in the number of edges `E` from input
 - Repeat:
 	- Read in pairs of integers
 - Repeat:
-	- For each vertices print the adjacent list
+	- For each vertex print the adjacent list
 
 Graph representations:
 
-- list of edges: maintain a list of the edges (linked list or vector).
-- adjacency matrix: maintain a 2D `VxV` boolean array; for each edge v-w in graph: `adj[v][w] = adj[v][w] = true` (two entries for each edge), better for dense graphs.
-- adjacency list: maintain vertex-indexed array of lists(bags), better for sparse graphs.
+- list of edges: maintain a list of the edges (linked list or vector)
+- adjacency matrix: maintain a 2D `VxV` boolean array; for each edge v-w in graph: `adj[v][w] = adj[v][w] = true` (two entries for each edge), better for dense graphs
+- adjacency list: maintain vertex-indexed array of lists(bags), better for sparse graphs (huge number of vertices, small average vertex degree)
 
-Note: real world graphs tend to be sparse.
+Note: real world graphs tend to be sparse
 
 | [Representation] | [Space] | [Add edge] | [Is v connected to w?] | [Iterate over vertices adjacent to v] |
 |:----------:|:-----------:|:-----------:|:-----------:|:-----------:|
@@ -287,21 +300,28 @@ Note: real world graphs tend to be sparse.
 | adjacency matrix | `V^2` | `1` | `1` | `V` |
 | adjacency list | `V+E` | `1` | `degree(V)` | `degree(V)` |
 
-Note: adjacency matrix disallows parallel edges.
+Note: adjacency matrix disallows parallel edges
 
 ### Depth-First Search
 
-Goal: systematically search through a graph (mimic maze exploration).
+Goal: systematically search through a graph (mimic maze exploration)
+
+DFSRec(to visit a vertex `v`):
+
+- Mark `v` as visited
+- Recursively visit all unmarked vertices `w` adjacent to `v`
 
 DFS(to visit a vertex `v`):
 
-- Mark `v` as visited.
-- Recursively visit all unmarked vertices `w` adjacent to `v`.
+- Put `v` onto a LIFO stack, and mark it as visited
+- Repeat until the stack is empty:
+	- Remove the most recently added vertex `w`
+	- Add each of `w`'s unvisited neighbours to the stack, and mark them as visited
 
 Typical applications:
 
-- find all vertices connected to a given source vertex.
-- find a path between two vertices.
+- find all vertices connected to a given source vertex
+- find a path between two vertices
 
 Design pattern: decouple graph data type from graph processing.
 
@@ -310,52 +330,137 @@ Design pattern: decouple graph data type from graph processing.
 - query that graph-processing routine for information
 
 ```C++
-struct paths{
-	//finds paths in g from source s
-	paths(graph const& g, unsigned int s);
+struct paths_t{
+	//finds paths in g from v to al connected vertices
+	paths_t(graph_t const& g, unsigned int v);
 
-	//is there a path from s to v?
-	bool has_path_to(unsigned int v);
+	//is there a path from v to w?
+	bool connected_to(unsigned int w);
+	
+	//distance from v to w
+	uint64_t distance_to(unsigned int w);
 
-	//path from s to v, empty string if no such path
-	std::vector<unsigned int>& path_to(unsigned int v);
+	//path from v to w
+	std::deque<unsigned int> const path_to(unsigned int v);
 };
 ```
 
-A possible basic client which prints all vertices connected to a given vertex s (`graph/basic_graph_paths_client.cpp`)
+The algorithm is using 3 arrays:
+
+- a boolean array `marked` used to mark the visited vertices
+- an unsigned int array `edge_to` used to keep track of paths; `edge_to[w] = v` means that edge `v-w` taken to visit `w` for first time
+- an unsigned int array `dist_to` used to keep track of distance; `d = dist_to[w]` means that vertex `w` is at distance `d` from `v`
+
+An implementation can be found in `undirected_graphs/paths.h`
+
+Also an iterative DFS implementation (DFSEqRec) equivalent to DFSRec can also be found in `undirected_graphs/paths.h`
+
+Proposition: DFS marks all vertices connected to s in time proportional to `V+E`
+
+Pf: Each vertex connected to s is visited once and for each vertex we visit all incident edges
+
+A possible basic client which prints all vertices `w` connected to a given vertex `v` (`undirected_graphs/basic_graph_paths_client.cpp`)
 
 ```C++
-paths ps{g, s};
-for(unsigned int v = 0; v < g.v(); ++v)
-	if(ps.has_path_to(v))
-		std::cout << v << std::cout;
+paths ps{g, v};
+ps.run();
+for(unsigned int w = 0; w < g.vertices(); ++w)
+	if(ps.connected_to(w))
+		std::cout << w << std::cout;
 ```
-
-The algorithm is using 2 arrays:
-
-- a boolean array `marked` used to mark the visited vertices.
-- an unsigned int array `edge_to` used to keep track of paths; `edge_to[w] = v` means that edge `v-w` taken to visit `w` for first time.
-
-An implementation can be found in `graph/paths_dfs.h`.
-
-Proposition: DFS marks all vertices connected to s in time proportional to the sum of their degrees.
-
-Pf: Each vertex connected to s is visited once.
 
 Other application examples: flood fill
 
-Assumptions: a picture has millions to billions of pixels.
+Assumptions: a picture has millions to billions of pixels
 
 Solution: build a grid graph, where
 
 - vertex: pixels
 - edge: only between adjacent pixels with similar colour
-- blob: all pixels connected to given pixel.
-
+- blob: all pixels connected to given pixel
 
 ### Breadth-First Search
 
-### Connected Components
+BFS(to visit a vertex `v`):
+
+- Put `v` onto a FIFO queue, and mark it as visited
+- Repeat until the queue is empty:
+	- Remove the least recently added vertex `w`
+	- Add each of `w`'s unvisited neighbours to the queue, and mark them as visited
+
+Intuition:
+
+- BFS examines vertices in increasing distance from `v`
+- BFS finds the path between `v` to any vertex `w` that uses _fewer number of edges_
+
+The algorithm is using 3 arrays:
+
+- a boolean array `marked` used to mark the visited vertices
+- an unsigned int array `edge_to` used to keep track of paths; `edge_to[w] = v` means that edge `v-w` taken to visit `w` for first time
+- an unsigned int array `dist_to` used to keep track of distance; `d = dist_to[w]` means that vertex `w` is at distance `d` from `v`
+
+An implementation can be found in `undirected_graphs/paths.h`
+
+Proposition: BFS computes shortest paths (fewer number of edges) from s to all other vertices in a graph in time proportional to `V+E`
+
+Pf: Queue always consists of `0` or more vertices of distance `k` from `v`, followed by `0` or more vertices of distance `k+1`
+
+### Connected Components (CC)
+
+Def: Vertices `v` and `w` are _connected_ if there is a path between them.
+
+Goal: Preprocess graph to answer queries of the form is `v` connected to `w` in _constant time_.
+
+Note:
+
+- Union-Find(UF) is not really the implementation of CC as it cannot answer the specified question in constant time. Also CC is specific to static graphs and UF is suitable for dynamic graphs.
+- the relation _is connected to_ is an _equivalence relation_:
+	- reflexive: `v` is connected to `v`
+	- symmetric: if `v` is connected to `w`, then `w` is connected to `v`
+	- transitive: if `v` connected to `w` and `w` connected to `x`, then `v` is connected to `x`
+- a connected component is a maximal set of connected vertices
+
+
+The proposed interface:
+```C++
+struct connected_comps_t{
+	//find connected components in g
+	connected_comps_t(graph_t g);
+	
+	//are v and w connected
+	bool connected(unsigned int v, unsigned w);
+	
+	//component identifier for v
+	unsigned int id(unsigned int v);
+	
+	//number of connected components
+	unsigned int count();
+};
+```
+An implementation can be found in `undirected_graphs/connected_comps.h`
+
+Algorithm:
+
+- initialise all vertices as unmarked.
+- for each unmarked vertex v, run DFS to identify all vertices discovered as part of the same component
+
+Possible application: Blobs detection
+
+- given a grayscale image of particles, identify/count blobs
+- a blob is defined as a connected component of at least 20-30 pixels
 
 ### Graph Challenges
 
+Problem 1: Is a graph bipartite? - Relatively easy, use DFS.
+
+Problem 2: Find a cycle? - Easy, use DFS.
+
+Problem 3: Is there a general cycle that uses each edge exactly once? (Euler tour) - A connected graph is Eulerian iff all vertices have _even_ degree.
+
+Problem 4: Find a eulerian tour - Relatively easy.
+
+Problem 5: Find a cycle that visits every vertex exactly once (travel salesman problem) - Intractable, classic NP-complete problem also called Hamiltonian cycle.
+
+Problem 6: Are two graphs identical except for vertex names? - Called also the graph isomorphism problem, it is an open problem (no solution but not NP-complete either).
+
+Problem 7: Is it possible to lay out a graph in the plan without crossing edges? - There is a linear time DFS-based algorithm but hard/complex to implement.
