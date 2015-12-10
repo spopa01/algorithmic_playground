@@ -1,3 +1,3 @@
-Algorithms and Data Structures (Fall    2007): https://www.cs.princeton.edu/~rs/AlgsDS07/
-Algorithms and Data Structures (Fall    2012): http://www.cs.princeton.edu/courses/archive/fall14/cos226/lectures.php
-Algorithms and Data Structures (Fall    2015): http://www.cs.princeton.edu/courses/archive/fall15/cos226/lectures.php
+- Algorithms and Data Structures (Fall    2007): https://www.cs.princeton.edu/~rs/AlgsDS07/
+- Algorithms and Data Structures (Fall    2012): http://www.cs.princeton.edu/courses/archive/fall12/cos226/lectures.php
+- Algorithms and Data Structures (Fall    2015): http://www.cs.princeton.edu/courses/archive/fall15/cos226/lectures.php
