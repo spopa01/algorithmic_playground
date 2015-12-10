@@ -1,7 +1,6 @@
-// to compile (e.g.): g++ -std=c++14 basic_paths_client.cpp -O3 , add -DLOG for logging
-// to run (e.g.): ./a.out < datasets/tinyG.txt
+// to compile (e.g.): g++ -std=c++14 basic_paths_client.cpp -O3
 // to run (e.g.): ./a.out algo < datasets/tinyG.txt
-//      where algo = dfs_rec | dfs_eq_rec | dfs | bfs
+//      where algo: dfs_rec | dfs_eq_rec | dfs | bfs
 
 // DFSRec vs DFSEqRec
 // run: ./a.out dfs_rec < datasets/tinyG.txt > dfs_rec.txt
@@ -13,6 +12,7 @@
 
 #include <map>
 #include <string>
+
 #include <cstdlib>
 
 std::string default_algo = "dfs_rec";
@@ -30,13 +30,13 @@ std::unique_ptr<paths_t> build_algorithm(graph_t const& graph, uint64_t source, 
     if (algo_it != str_to_algo.end())
         return (algo_it->second)(graph,source);
 
-    std::cerr << "invalid algo, use default algo" << std::endl;
+    std::cerr << "Invalid algo, use default algo" << std::endl;
     return (str_to_algo[default_algo])(graph,source);
 }
 
 int main(int argc, char** argv){
     if (argc != 1 && argc != 2){
-        std::cerr << "invalid number of arguments" << std::endl;
+        std::cerr << "Invalid number of arguments" << std::endl;
         return EXIT_FAILURE;
     }
 
@@ -49,7 +49,7 @@ int main(int argc, char** argv){
     for(uint64_t v = 0; v < graph.vertices(); ++v){
         auto paths = build_algorithm(graph, v, algo);
 
-        std::cout << "from " << v << " to" <<std::endl;
+        std::cout << "From " << v << " to" <<std::endl;
         for(uint64_t w = 0; w < graph.vertices(); ++w){
             if (v == w) continue;
 

@@ -8,14 +8,16 @@
 #include <deque>
 
 struct paths_t{
-    //finds paths in g from v to all connected vertices at a maximum distance d
-    paths_t(graph_t const& g, uint64_t v) : graph{g}, source{v}
+    //finds paths in g from v to all connected vertices
+    //takes time proportional to E+V as both DFS and BFS take time proportional to E+V
+    paths_t(graph_t const& g, uint64_t v) : g{g}, v{v}
     {
-        assert(source < graph.vertices());
-        marked.resize(graph.vertices(), false);
-        edge_to.resize(graph.vertices(), graph_t::infinity);
-        dist_to.resize(graph.vertices(), graph_t::infinity);
-        dist_to[source] = 0;
+        assert(g.is_valid() && v<g.vertices());
+
+        marked.resize(g.vertices(), false);
+        edge_to.resize(g.vertices(), infinity);
+        dist_to.resize(g.vertices(), infinity);
+        dist_to[v] = 0;
     }
 
     //just to force this type to be only base class
@@ -23,7 +25,7 @@ struct paths_t{
 
     //is there a path from v to w?
     bool connected_to(uint64_t w){
-        assert(w < graph.vertices());
+        assert(w < g.vertices());
         return marked[w];
     };
 
@@ -36,19 +38,17 @@ struct paths_t{
     //returns the path from vertex v to vertex w
     std::deque<uint64_t> const path_to(uint64_t w){
         assert(connected_to(w));
-
         std::deque<uint64_t> path;
         do{
             path.push_front(w);
             w = edge_to[w];
-        }while(w != graph_t::infinity);
-
+        }while(w != infinity);
         return path;
     }
 
 protected:
-    graph_t const& graph;
-    uint64_t const source;
+    graph_t const& g;
+    uint64_t const v;
 
     std::vector<bool> marked;
     std::vector<uint64_t> edge_to;
@@ -59,12 +59,12 @@ paths_t::~paths_t(){};
 
 //DFSRec
 struct dfs_rec_paths_t : public paths_t{
-    dfs_rec_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v) {algo(source);}
+    dfs_rec_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v) {algo(v);}
 
 private:
     void algo(uint64_t v){
         marked[v] = true;
-        for(auto w : graph.adj(v)){
+        for(auto w : g.adj(v)){
             if(!marked[w]){
                 edge_to[w] = v;
                 dist_to[w] = dist_to[v]+1;
@@ -78,18 +78,18 @@ private:
 struct dfs_eq_rec_paths_t : public paths_t{
     dfs_eq_rec_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v)
     {
-        for(uint64_t v = 0; v<graph.vertices(); ++v){
-            auto& adj = graph.adj(v);
+        for(uint64_t v = 0; v<g.vertices(); ++v){
+            auto& adj = g.adj(v);
             its.push_back(adj.begin());
             its_end.push_back(adj.end());
         }
 
-        algo(source);
+        algo(v);
     }
 
 private:
     void algo(uint64_t v){
-        mark_and_push(graph_t::infinity, v);
+        mark_and_push(infinity, v);
         while(not_empty()){
             v = peek();
             if(has_next(v)){
@@ -105,7 +105,7 @@ private:
     void mark_and_push(uint64_t v, uint64_t w){
         marked[w] = true;
         edge_to[w] = v;
-        dist_to[w] = v != graph_t::infinity ? dist_to[v]+1 : 0;
+        dist_to[w] = v != infinity ? dist_to[v]+1 : 0;
         stack.push(w);
     }
     bool not_empty(){return stack.size() > 0;}
@@ -119,8 +119,8 @@ private:
     std::stack<uint64_t> stack;
 
     //this is necessary in order to make DFS to behave exactly like the DFSRec
-    std::vector<std::unordered_set<uint64_t>::iterator> its;
-    std::vector<std::unordered_set<uint64_t>::iterator> its_end;
+    std::vector<std::set<uint64_t>::iterator> its;
+    std::vector<std::set<uint64_t>::iterator> its_end;
 };
 
 namespace util{
@@ -132,14 +132,14 @@ namespace util{
 //the only difference is the type of the underlying ADT used by the algo
 template<typename ADT>
 struct generic_paths_t : public paths_t{
-    generic_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v) {algo(source);}
+    generic_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v) {algo(v);}
 
 private:
     void algo(uint64_t v){
-        mark_and_push(graph_t::infinity, v);
+        mark_and_push(infinity, v);
         while(not_empty()){
             v = peek(); pop();
-            for(auto w : graph.adj(v)){
+            for(auto w : g.adj(v)){
                 if(!marked[w])
                     mark_and_push(v, w);
             }
@@ -149,7 +149,7 @@ private:
     void mark_and_push(uint64_t v, uint64_t w){
         marked[w] = true;
         edge_to[w] = v;
-        dist_to[w] = v != graph_t::infinity ? dist_to[v]+1 : 0;
+        dist_to[w] = v != infinity ? dist_to[v]+1 : 0;
         adt.push(w);
     }
     bool not_empty(){return adt.size() > 0;}

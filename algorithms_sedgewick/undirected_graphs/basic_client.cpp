@@ -1,4 +1,4 @@
-// to compile (e.g.): g++ -std=c++14 basic_client.cpp -O3 , add -DLOG for logging
+// to compile (e.g.): g++ -std=c++14 basic_client.cpp -O3
 // to run (e.g.): ./a.out < datasets/tinyG.txt
 
 #include "graph.h"

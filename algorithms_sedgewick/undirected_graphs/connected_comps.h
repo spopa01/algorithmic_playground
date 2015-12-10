@@ -4,18 +4,20 @@
 #include "graph.h"
 
 struct connected_comps_t{
-    //finds paths in g from v to all connected vertices at a maximum distance d
+    //finds the connected components
     connected_comps_t(graph_t const& g) : graph{g}
     {
+        assert(g.is_valid());
+
         marked.resize(graph.vertices(), false);
-        cc.resize(graph.vertices(), graph_t::infinity);
+        cc.resize(graph.vertices(), infinity);
 
         for(uint64_t v=0; v<graph.vertices(); ++v){
             if(!marked[v]){ dfs(v); ncc++; }
         }
     }
 
-    //is  v connected to w?
+    //is v connected to w?
     bool connected(uint64_t v, uint64_t w){
         assert(v != w); 
         assert(v < graph.vertices());
@@ -23,11 +25,13 @@ struct connected_comps_t{
         return cc[v] == cc[w];
     };
 
+    //returns the connected component id associated to v
     uint64_t id(uint64_t v){
         assert(v < graph.vertices());
         return cc[v];
     }
 
+    //returns the total number of connected components
     uint64_t count(){return ncc;}
 
 private:
