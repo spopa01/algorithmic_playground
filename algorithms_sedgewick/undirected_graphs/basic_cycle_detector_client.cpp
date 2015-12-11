@@ -8,7 +8,7 @@
 
 int main(int argc, char** argv){
     if(argc != 1){
-        std::cerr << "invalid number of arguments" << std::endl;
+        std::cerr << "Invalid number of arguments" << std::endl;
         return EXIT_FAILURE;
     }
 

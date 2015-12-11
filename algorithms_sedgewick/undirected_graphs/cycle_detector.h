@@ -7,8 +7,7 @@
 
 struct cycle_detector_t{
     //finds cycles in an undirected graph
-    cycle_detector_t(graph_t const& g) : g{g}
-    {
+    cycle_detector_t(graph_t const& g) : g{g}{
         assert(g.is_valid());
         marked.resize(g.vertices(), false);
         edge_to.resize(g.vertices(), infinity);
@@ -16,8 +15,11 @@ struct cycle_detector_t{
             if(!marked[v]) dfs(v, v);
     }
 
-    bool positive(){return cycle.size();}
-    std::deque<uint64_t> const& get_cycle(){return cycle;}
+    bool positive()const{return cycle.size();}
+    std::deque<uint64_t> const& get_cycle()const{
+        assert(cycle.size());
+        return cycle;
+    }
 private:
     void dfs(uint64_t u, uint64_t v){
         marked[v] = true;
@@ -29,7 +31,7 @@ private:
                 edge_to[w] = v;
                 dfs(v, w);
             }else if(w!=u){
-                unfold_path(v,w);
+                build_path(v,w);
             }
         }
     }
@@ -37,7 +39,7 @@ private:
     ///w--->u--->v
     ///\_________|
     ///w - u - v - w
-    void unfold_path(uint64_t v, uint64_t w){
+    void build_path(uint64_t v, uint64_t w){
         for(auto x=v; x!=w; x=edge_to[x])
             cycle.push_front(x);
         cycle.push_front(w);

@@ -6,7 +6,10 @@
 #include <set>
 #include <cassert>
 
+//some useful conventions
 const uint64_t infinity = std::numeric_limits<uint64_t>::max();
+enum class label_t : char {neg = -1, unknown = 0, pos = 1};
+label_t inv(label_t l){return label_t((char)l * (char)label_t::neg);}
 
 //Graph represenation for static graphs...
 
@@ -25,13 +28,13 @@ struct graph_t{
     bool is_valid() const {return valid;}
 
     //number or vertices
-    uint64_t vertices() const {
+    uint64_t vertices()const{
         assert(valid);
         return adjs.size();
     }
 
     //vertices adjancent to v
-    std::set<uint64_t> const& adj(uint64_t v) const {
+    std::set<uint64_t> const& adj(uint64_t v)const{
         assert(valid);
         assert(v < adjs.size());
         return adjs[v];

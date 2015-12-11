@@ -10,8 +10,7 @@
 struct paths_t{
     //finds paths in g from v to all connected vertices
     //takes time proportional to E+V as both DFS and BFS take time proportional to E+V
-    paths_t(graph_t const& g, uint64_t v) : g{g}, v{v}
-    {
+    paths_t(graph_t const& g, uint64_t v) : g{g}, v{v}{
         assert(g.is_valid() && v<g.vertices());
 
         marked.resize(g.vertices(), false);
@@ -24,19 +23,19 @@ struct paths_t{
     virtual ~paths_t() = 0;
 
     //is there a path from v to w?
-    bool connected_to(uint64_t w){
+    bool connected_to(uint64_t w)const{
         assert(w < g.vertices());
         return marked[w];
     };
 
     //returns the distance from vertex v a vertex w
-    uint64_t distance_to(uint64_t w){
+    uint64_t distance_to(uint64_t w)const{
         assert(connected_to(w));
         return dist_to[w];
     }
 
     //returns the path from vertex v to vertex w
-    std::deque<uint64_t> const path_to(uint64_t w){
+    std::deque<uint64_t> const path_to(uint64_t w)const{
         assert(connected_to(w));
         std::deque<uint64_t> path;
         do{
@@ -76,14 +75,12 @@ private:
 
 //DFSEqRec - this dfs non-recursive/iterative implementation computes the same paths as DFSRec
 struct dfs_eq_rec_paths_t : public paths_t{
-    dfs_eq_rec_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v)
-    {
+    dfs_eq_rec_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v){
         for(uint64_t v = 0; v<g.vertices(); ++v){
             auto& adj = g.adj(v);
             its.push_back(adj.begin());
             its_end.push_back(adj.end());
         }
-
         algo(v);
     }
 
@@ -132,7 +129,7 @@ namespace util{
 //the only difference is the type of the underlying ADT used by the algo
 template<typename ADT>
 struct generic_paths_t : public paths_t{
-    generic_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v) {algo(v);}
+    generic_paths_t(graph_t const& g, uint64_t v) : paths_t(g,v){algo(v);}
 
 private:
     void algo(uint64_t v){
